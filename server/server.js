@@ -218,10 +218,37 @@ let needSetup = false;
             await StatusPage.handleStatusPageResponse(response, server.indexHTML, slug);
 
         } else if (uptimeKumaEntryPage && uptimeKumaEntryPage.startsWith("statusPage-")) {
-            response.redirect("/status/" + uptimeKumaEntryPage.replace("statusPage-", ""));
+            response.redirect("/uptime/status/" + uptimeKumaEntryPage.replace("statusPage-", ""));
 
         } else {
-            response.redirect("/dashboard");
+            response.redirect("/uptime/dashboard");
+        }
+    });
+
+    // Uptime base path entry
+    app.get("/uptime", async (request, response) => {
+        let hostname = request.hostname;
+        if (await setting("trustProxy")) {
+            const proxy = request.headers["x-forwarded-host"];
+            if (proxy) {
+                hostname = proxy;
+            }
+        }
+
+        log.debug("entry", `Request Domain: ${hostname}`);
+
+        const uptimeKumaEntryPage = server.entryPage;
+        if (hostname in StatusPage.domainMappingList) {
+            log.debug("entry", "This is a status page domain");
+
+            let slug = StatusPage.domainMappingList[hostname];
+            await StatusPage.handleStatusPageResponse(response, server.indexHTML, slug);
+
+        } else if (uptimeKumaEntryPage && uptimeKumaEntryPage.startsWith("statusPage-")) {
+            response.redirect("/uptime/status/" + uptimeKumaEntryPage.replace("statusPage-", ""));
+
+        } else {
+            response.redirect("/uptime/dashboard");
         }
     });
 
@@ -294,12 +321,13 @@ let needSetup = false;
     // With Basic Auth using the first user's username/password
     app.get("/metrics", apiAuth, prometheusAPIMetrics());
 
-    app.use("/", expressStaticGzip("dist", {
+    app.use("/uptime", expressStaticGzip("dist", {
         enableBrotli: true,
     }));
 
-    // ./data/upload
+    // ./data/upload - accessible from both base path and root for compatibility
     app.use("/upload", express.static(Database.uploadDir));
+    app.use("/uptime/upload", express.static(Database.uploadDir));
 
     app.get("/.well-known/change-password", async (_, response) => {
         response.redirect("https://github.com/louislam/uptime-kuma/wiki/Reset-Password-via-CLI");
