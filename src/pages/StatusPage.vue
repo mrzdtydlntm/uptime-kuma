@@ -725,10 +725,10 @@ export default {
             this.updateUpdateTimer();
         }).catch( function (error) {
             if (error.response.status === 404) {
-                location.href = "/page-not-found";
+                this.$router.push("/page-not-found");
             }
             console.log(error);
-        });
+        }.bind(this));
 
         this.updateHeartbeatList();
 
@@ -862,7 +862,7 @@ export default {
 
                     setTimeout(() => {
                         this.loading = false;
-                        location.href = "/status/" + this.config.slug;
+                        this.$router.push("/status/" + this.config.slug);
                     }, time);
 
                 } else {
@@ -888,7 +888,7 @@ export default {
             this.$root.getSocket().emit("deleteStatusPage", this.slug, (res) => {
                 if (res.ok) {
                     this.enableEditMode = false;
-                    location.href = "/manage-status-page";
+                    this.$router.push("/manage-status-page");
                 } else {
                     this.$root.toastError(res.msg);
                 }
@@ -934,7 +934,7 @@ export default {
          * @returns {void}
          */
         discard() {
-            location.href = "/status/" + this.slug;
+            this.$router.push("/status/" + this.slug);
         },
 
         /**
